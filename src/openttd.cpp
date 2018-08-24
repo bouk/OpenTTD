@@ -329,13 +329,17 @@ static void LoadIntroGame(bool load_newgrfs = true)
 	SetupColoursAndInitialWindow();
 
 	/* Load the default opening screen savegame */
+	/*
+	TODO(bouk): Loading doesn't work because of lack of LZMA, and generating twice crashes
 	if (SaveOrLoad("opntitle.dat", SLO_LOAD, DFT_GAME_FILE, BASESET_DIR) != SL_OK) {
 		GenerateWorld(GWM_EMPTY, 64, 64); // if failed loading, make empty world.
+
 		WaitTillGeneratedWorld();
 		SetLocalCompany(COMPANY_SPECTATOR);
 	} else {
 		SetLocalCompany(COMPANY_FIRST);
 	}
+	*/
 
 	_pause_mode = PM_UNPAUSED;
 	_cursor.fix_at = false;
@@ -749,7 +753,6 @@ int openttd_main(int argc, char *argv[])
 	/* Initialize game palette */
 	GfxInitPalettes();
 
-	DEBUG(misc, 1, "Loading blitter...");
 	if (blitter == NULL && _ini_blitter != NULL) blitter = stredup(_ini_blitter);
 	_blitter_autodetected = StrEmpty(blitter);
 	/* Activate the initial blitter.

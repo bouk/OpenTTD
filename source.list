@@ -95,19 +95,23 @@ tilearea.cpp
 townname.cpp
 #if WIN32
 #else
-	#if OS2
-		os/os2/os2.cpp
-		3rdparty/os2/getaddrinfo.c
-		3rdparty/os2/getaddrinfo.h
-		3rdparty/os2/getnameinfo.c
-		3rdparty/os2/getnameinfo.h
+	#if SWITCH
+		os/switch/switch.cpp
 	#else
-		#if OSX
-			os/macosx/crashlog_osx.cpp
+		#if OS2
+			os/os2/os2.cpp
+			3rdparty/os2/getaddrinfo.c
+			3rdparty/os2/getaddrinfo.h
+			3rdparty/os2/getnameinfo.c
+			3rdparty/os2/getnameinfo.h
 		#else
-			os/unix/crashlog_unix.cpp
+			#if OSX
+				os/macosx/crashlog_osx.cpp
+			#else
+				os/unix/crashlog_unix.cpp
+			#end
+			os/unix/unix.cpp
 		#end
-		os/unix/unix.cpp
 	#end
 #end
 vehicle.cpp
@@ -1117,7 +1121,10 @@ music/midifile.cpp
 	#else
 		#if MORPHOS
 		#else
-			music/extmidi.cpp
+			#if SWITCH
+			#else
+				music/extmidi.cpp
+			#end
 		#end
 	#end
 #end
@@ -1186,7 +1193,11 @@ thread/thread.h
 			#if MORPHOS
 				thread/thread_morphos.cpp
 			#else
-				thread/thread_pthread.cpp
+				#if SWITCH
+					thread/thread_c11.cpp
+				#else
+					thread/thread_pthread.cpp
+				#end
 			#end
 		#end
 	#end

@@ -113,7 +113,7 @@ void StringFilter::AddLine(const char *str)
 	const WordState *end = this->word_index.End();
 	for (WordState *it = this->word_index.Begin(); it != end; ++it) {
 		if (!it->match) {
-			if ((match_case ? strstr(str, it->start) : strcasestr(str, it->start)) != NULL) {
+			if ((match_case ? strstr(str, it->start) : strstr(str, it->start)) != NULL) {
 				it->match = true;
 				this->word_matches++;
 			}

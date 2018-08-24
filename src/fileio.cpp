@@ -241,41 +241,6 @@ static void FioFreeHandle()
 }
 #endif /* LIMITED_FDS */
 
-/**
- * Open a slotted file.
- * @param slot Index to assign.
- * @param filename Name of the file at the disk.
- * @param subdir The sub directory to search this file in.
- */
-void FioOpenFile(int slot, const char *filename, Subdirectory subdir)
-{
-	FILE *f;
-
-#if defined(LIMITED_FDS)
-	FioFreeHandle();
-#endif /* LIMITED_FDS */
-	f = FioFOpenFile(filename, "rb", subdir);
-	if (f == NULL) usererror("Cannot open file '%s'", filename);
-	long pos = ftell(f);
-	if (pos < 0) usererror("Cannot read file '%s'", filename);
-
-	FioCloseFile(slot); // if file was opened before, close it
-	_fio.handles[slot] = f;
-	_fio.filenames[slot] = filename;
-
-	/* Store the filename without path and extension */
-	const char *t = strrchr(filename, PATHSEPCHAR);
-	_fio.shortnames[slot] = stredup(t == NULL ? filename : t);
-	char *t2 = strrchr(_fio.shortnames[slot], '.');
-	if (t2 != NULL) *t2 = '\0';
-	strtolower(_fio.shortnames[slot]);
-
-#if defined(LIMITED_FDS)
-	_fio.usage_count[slot] = 0;
-	_fio.open_handles++;
-#endif /* LIMITED_FDS */
-	FioSeekToFile(slot, (uint32)pos);
-}
 
 static const char * const _subdirs[] = {
 	"",
@@ -295,6 +260,42 @@ static const char * const _subdirs[] = {
 	"screenshot" PATHSEP,
 };
 assert_compile(lengthof(_subdirs) == NUM_SUBDIRS);
+
+/**
+ * Open a slotted file.
+ * @param slot Index to assign.
+ * @param filename Name of the file at the disk.
+ * @param subdir The sub directory to search this file in.
+ */
+void FioOpenFile(int slot, const char *filename, Subdirectory subdir)
+{
+	FILE *f;
+	FioCloseFile(slot); // if file was opened before, close it
+
+#if defined(LIMITED_FDS)
+	FioFreeHandle();
+#endif /* LIMITED_FDS */
+	f = FioFOpenFile(filename, "rb", subdir);
+	if (f == NULL) usererror("Cannot open file '%s'", filename);
+	long pos = ftell(f);
+	if (pos < 0) usererror("Cannot read file '%s'", filename);
+
+	_fio.handles[slot] = f;
+	_fio.filenames[slot] = filename;
+
+	/* Store the filename without path and extension */
+	const char *t = strrchr(filename, PATHSEPCHAR);
+	_fio.shortnames[slot] = stredup(t == NULL ? filename : t);
+	char *t2 = strrchr(_fio.shortnames[slot], '.');
+	if (t2 != NULL) *t2 = '\0';
+	strtolower(_fio.shortnames[slot]);
+
+#if defined(LIMITED_FDS)
+	_fio.usage_count[slot] = 0;
+	_fio.open_handles++;
+#endif /* LIMITED_FDS */
+	FioSeekToFile(slot, (uint32)pos);
+}
 
 const char *_searchpaths[NUM_SEARCHPATHS];
 TarList _tar_list[NUM_SUBDIRS];

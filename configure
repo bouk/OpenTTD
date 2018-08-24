@@ -112,6 +112,7 @@ AWKCOMMAND='
 		if ($0 == "SDL"         && "'$sdl_config'" == "")          { next; }
 		if ($0 == "PNG"         && "'$png_config'" == "")          { next; }
 		if ($0 == "OSX"         && "'$os'" != "OSX")               { next; }
+		if ($0 == "SWITCH"      && "'$os'" != "SWITCH")            { next; }
 		if ($0 == "OS2"         && "'$os'" != "OS2")               { next; }
 		if ($0 == "DEDICATED"   && "'$enable_dedicated'" != "1")   { next; }
 		if ($0 == "AI"          && "'$enable_ai'" == "0")          { next; }

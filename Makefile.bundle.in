@@ -163,6 +163,14 @@ bundle_exe: all
 	$(Q)cd $(ROOT_DIR)/os/windows/installer && makensis.exe //DVERSION_INCLUDE=version_$(PLATFORM).txt install.nsi
 	$(Q)mv $(ROOT_DIR)/os/windows/installer/*$(PLATFORM).exe "$(BUNDLES_DIR)/$(BUNDLE_NAME).exe"
 
+bundle_nro: all
+	@echo '[BUNDLE] Creating $(BUNDLE_NAME).nro'
+	$(Q)elf2nro bin/openttd bin/openttd.nro
+
+bundle_nso: all
+	@echo '[BUNDLE] Creating $(BUNDLE_NAME).nso'
+	$(Q)elf2nro bin/openttd bin/openttd.nso
+
 ifdef OSXAPP
 install:
 	@echo '[INSTALL] Cannot install the OSX Application Bundle'

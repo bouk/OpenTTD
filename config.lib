@@ -553,10 +553,10 @@ check_params() {
 
 	# Check if all params have valid values
 
-	# OS only allows DETECT, UNIX, OSX, FREEBSD, DRAGONFLY, OPENBSD, NETBSD, MORPHOS, BEOS, HAIKU, SUNOS, CYGWIN, MINGW, OS2, and DOS
-	if [ -z "`echo $os | egrep '^(DETECT|UNIX|OSX|FREEBSD|DRAGONFLY|OPENBSD|NETBSD|HPUX|MORPHOS|BEOS|HAIKU|SUNOS|CYGWIN|MINGW|OS2|DOS)$'`" ]; then
+	# OS only allows DETECT, UNIX, OSX, FREEBSD, DRAGONFLY, OPENBSD, NETBSD, MORPHOS, BEOS, HAIKU, SUNOS, SWITCH, CYGWIN, MINGW, OS2, and DOS
+	if [ -z "`echo $os | egrep '^(DETECT|UNIX|OSX|FREEBSD|DRAGONFLY|OPENBSD|NETBSD|HPUX|MORPHOS|BEOS|HAIKU|SUNOS|SWITCH|CYGWIN|MINGW|OS2|DOS)$'`" ]; then
 		log 1 "configure: error: invalid option --os=$os"
-		log 1 " Available options are: --os=[DETECT|UNIX|OSX|FREEBSD|DRAGONFLY|OPENBSD|NETBSD|HPUX|MORPHOS|BEOS|HAIKU|SUNOS|CYGWIN|MINGW|OS2|DOS]"
+		log 1 " Available options are: --os=[DETECT|UNIX|OSX|FREEBSD|DRAGONFLY|OPENBSD|NETBSD|HPUX|MORPHOS|BEOS|HAIKU|SUNOS|SWITCH|CYGWIN|MINGW|OS2|DOS]"
 		exit 1
 	fi
 	# cpu_type can be either 32 or 64
@@ -623,7 +623,7 @@ check_params() {
 	detect_sse_capable_architecture
 
 	if [ "$enable_static" = "1" ]; then
-		if [ "$os" = "MINGW" ] || [ "$os" = "CYGWIN" ] || [ "$os" = "MORPHOS" ] || [ "$os" = "DOS" ]; then
+		if [ "$os" = "MINGW" ] || [ "$os" = "CYGWIN" ] || [ "$os" = "MORPHOS" ] || [ "$os" = "DOS" ] || [ "$os" = "SWITCH" ]; then
 			enable_static="2"
 		else
 			enable_static="0"
@@ -633,7 +633,7 @@ check_params() {
 	if [ "$enable_static" != "0" ]; then
 		log 1 "checking static... yes"
 
-		if [ "$os" != "MINGW" ] && [ "$os" != "CYGWIN" ] && [ "$os" != "OSX" ] && [ "$os" != "MORPHOS" ] && [ "$os" != "DOS" ]; then
+		if [ "$os" != "MINGW" ] && [ "$os" != "CYGWIN" ] && [ "$os" != "OSX" ] && [ "$os" != "MORPHOS" ] && [ "$os" != "DOS" ] && ["$os" != "SWITCH" ]; then
 			log 1 "WARNING: static is only known to work on Windows, DOS, MacOSX and MorphOS"
 			log 1 "WARNING: use static at your own risk on this platform"
 
@@ -786,6 +786,9 @@ check_params() {
 
 	if [ "$enable_network" = "1" ] && [ "$os" = "DOS" ]; then
 		log 1 "checking network... DOS, skipping"
+		enable_network=0
+	elif [ "$enable_network" = "1" ] && [ "$os" = "SWITCH" ]; then
+		log 1 "checking network... SWITCH, skipping"
 		enable_network=0
 	elif [ "$enable_network" != "0" ]; then
 		log 1 "checking network... found"
@@ -1481,11 +1484,13 @@ make_compiler_cflags() {
 			fi
 		fi
 
-		has_rdynamic=`$1 -dumpspecs | grep rdynamic`
-		if [ -n "$has_rdynamic" ]; then
-			# rdynamic is used to get useful stack traces from crash reports.
-			flags="$flags -rdynamic"
-			ldflags="$ldflags -rdynamic"
+    if [ "$os" != "SWITCH" ]; then
+			has_rdynamic=`$1 -dumpspecs | grep rdynamic`
+			if [ -n "$has_rdynamic" ]; then
+				# rdynamic is used to get useful stack traces from crash reports.
+				flags="$flags -rdynamic"
+				ldflags="$ldflags -rdynamic"
+			fi
 		fi
 	fi
 
@@ -1619,7 +1624,7 @@ make_cflags_and_ldflags() {
 		fi
 	fi
 
-	if [ "$os" != "CYGWIN" ] && [ "$os" != "HAIKU" ] && [ "$os" != "OPENBSD" ] && [ "$os" != "MINGW" ] && [ "$os" != "MORPHOS" ] && [ "$os" != "OSX" ] && [ "$os" != "DOS" ] && [ "$os" != "OS2" ]; then
+	if [ "$os" != "CYGWIN" ] && [ "$os" != "HAIKU" ] && [ "$os" != "OPENBSD" ] && [ "$os" != "MINGW" ] && [ "$os" != "MORPHOS" ] && [ "$os" != "OSX" ] && [ "$os" != "DOS" ] && [ "$os" != "OS2" ] && [ "$os" != "SWITCH" ]; then
 		LIBS="$LIBS -lpthread"
 	fi
 
@@ -1634,6 +1639,11 @@ make_cflags_and_ldflags() {
 
 	if [ "$os" = "OPENBSD" ]; then
 		LIBS="$LIBS -pthread"
+	fi
+
+	if [ "$os" == "SWITCH" ]; then
+		CFLAGS="$CFLAGS -march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIC -ffunction-sections -I$DEVKITPRO/libnx/include -I$DEVKITPRO/portlibs/switch/include"
+		LIBS="$LIBS -specs=$DEVKITPRO/libnx/switch.specs -L$DEVKITPRO/portlibs/switch/lib -L$DEVKITPRO/libnx/lib -lnx"
 	fi
 
 	if [ "$os" = "OSX" ]; then
@@ -1686,7 +1696,7 @@ make_cflags_and_ldflags() {
 		CFLAGS="$CFLAGS `$sdl_config --cflags | sed 's@-D_GNU_SOURCE[^ ]*@@'`"
 		if [ "$os" != "MINGW" ] && [ "$os" != "CYGWIN" ]; then
 			if [ "$enable_static" != "0" ]; then
-				LIBS="$LIBS `$sdl_config --static-libs`"
+				LIBS="$LIBS `$sdl_config --static --libs`"
 			else
 				LIBS="$LIBS `$sdl_config --libs`"
 			fi

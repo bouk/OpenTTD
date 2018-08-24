@@ -1,0 +1,9 @@
+#!/bin/bash
+. $DEVKITPRO/switchvars.sh
+
+./configure \
+  --data-dir=openttd \
+  --host=aarch64-none-elf \
+  --os=switch \
+  --pkg-config=aarch64-none-elf-pkg-config \
+  --prefix-dir=sdmc:

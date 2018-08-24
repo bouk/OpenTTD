@@ -242,6 +242,11 @@ static void GetVideoModes()
 
 static void GetAvailableVideoMode(uint *w, uint *h)
 {
+	// HACK
+	*w = 1280;
+	*h = 720;
+	return;
+
 	/* All modes available? */
 	if (_all_modes || _num_resolutions == 0) return;
 
